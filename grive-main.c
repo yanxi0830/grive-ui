@@ -47,7 +47,9 @@ static void preferences_activate(GtkWidget *widget, gpointer data) {
 	/* Open Preferences Dialog */
 	GtkWidget *preference_dialog;
 	GtkWidget *preference_content;
-	GtkWidget *preference_vbox, *upload_frame, *download_frame;
+	GtkWidget *preference_vbox, *upload_hbox, *download_hbox, *upload_frame, *download_frame;
+	GtkWidget *upload_combo, *download_combo;
+	int i;
 
 	gint res;
 	GtkDialogFlags flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
@@ -62,9 +64,33 @@ static void preferences_activate(GtkWidget *widget, gpointer data) {
 													NULL);
 
 	preference_content = gtk_dialog_get_content_area(GTK_DIALOG(preference_dialog));
+	preference_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+	upload_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+	download_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+	upload_frame = gtk_frame_new("Upload Speed");
+	download_frame = gtk_frame_new("Download Speed");
+	gtk_container_add(GTK_CONTAINER(preference_content), preference_vbox);
+	gtk_box_pack_start(GTK_BOX(preference_vbox), upload_hbox, FALSE, TRUE, 10);
+	gtk_box_pack_start(GTK_BOX(preference_vbox), download_hbox, FALSE, TRUE, 10);
+	gtk_box_pack_start(GTK_BOX(upload_hbox), upload_frame, TRUE, TRUE, 10);
+	gtk_box_pack_start(GTK_BOX(download_hbox), download_frame, TRUE, TRUE, 10);
 
+	/* Combo box to select speeds */
+	upload_combo = gtk_combo_box_text_new();
+	download_combo = gtk_combo_box_text_new();
+	gtk_container_add(GTK_CONTAINER(upload_frame), upload_combo);
+	gtk_container_add(GTK_CONTAINER(download_frame), download_combo);
+	const char *speeds[] = {"Unlimited", "100", "200", "300", "500", "1000"};
 
+	for (i = 0; i < G_N_ELEMENTS(speeds); i++) {
+		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(upload_combo), speeds[i]);
+		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(download_combo), speeds[i]);
+	}
 
+	gtk_combo_box_set_active(GTK_COMBO_BOX(upload_combo), 0);
+	gtk_combo_box_set_active(GTK_COMBO_BOX(download_combo), 0);
+
+	gtk_widget_show_all(preference_dialog);
 
 	res = gtk_dialog_run(GTK_DIALOG(preference_dialog));
 
@@ -75,18 +101,6 @@ static void preferences_activate(GtkWidget *widget, gpointer data) {
 			break;
 	}
 	gtk_widget_destroy(preference_dialog);
-
-//	int result = gtk_dialog_run (GTK_DIALOG (dialog));
-//	switch (result)
-//	  {
-//	    case GTK_RESPONSE_ACCEPT:
-//	       // do_application_specific_something ();
-//	       break;
-//	    default:
-//	       // do_nothing_since_dialog_was_cancelled ();
-//	       break;
-//	  }
-//	gtk_widget_destroy (dialog);
 
 }
 
@@ -205,7 +219,6 @@ static void activate(GtkApplication* app, gpointer user_data) {
 	gtk_box_pack_start(GTK_BOX(choose_dir_hbox), choose_dir_label, FALSE, FALSE, 10);
 
 	app_data->curr_dir = gtk_label_new(cwd);
-	gtk_label_set_selectable(GTK_LABEL(app_data->curr_dir), TRUE);
 
 	gtk_box_pack_start(GTK_BOX(choose_dir_hbox), app_data->curr_dir, FALSE, FALSE, 0);
 	choose_dir_button = gtk_button_new_with_label("Choose Directory");

@@ -15,6 +15,9 @@ typedef struct AppData {
 	GtkWidget *download_combo;
 } AppData;
 
+const gchar *AUTH_URL =
+		"https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fdocs.google.com%2Ffeeds%2F+https%3A%2F%2Fdocs.googleusercontent.com%2F+https%3A%2F%2Fspreadsheets.google.com%2Ffeeds%2F&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id=22314510474.apps.googleusercontent.com";
+
 static void show_dir_chooser(GtkWidget *button, gpointer data) {
 	GtkWidget *dir_chooser_dialog;
 	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER;
@@ -103,6 +106,73 @@ static void help_contents_activate(GtkWidget *widget, gpointer data) {
 	/* Open Help Dialog */
 }
 
+static void auth_cb(GtkWidget *button, gpointer data) {
+	GtkWidget *auth_dialog;
+	GtkWidget *auth_content, *auth_vbox, *url_hbox, *token_hbox;
+	GtkWidget *url_help_label, *url_label, *token_help_label;
+	GtkWidget *token_entry;
+	const gchar *token_text;
+	gint res;
+	GtkDialogFlags flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
+
+	const gchar *sync_dir;
+	gchar cmd[2048];
+	GtkWidget *sync_label = ((AppData *) data)->curr_dir;
+
+	sync_dir = gtk_label_get_text(GTK_LABEL(sync_label));
+
+	g_snprintf(cmd, 2048, "grive -p %s -a", sync_dir);
+
+	/* Authorize, run grive in command line */
+	FILE *grive = popen(cmd, "w");
+
+	/* Open a dialog to display URL, enter token */
+	auth_dialog = gtk_dialog_new_with_buttons("Authentication",
+											  GTK_WINDOW(((AppData * ) data)->window),
+											  flags,
+											  ("_OK"),
+											  GTK_RESPONSE_ACCEPT,
+											  NULL);
+
+
+	auth_content = gtk_dialog_get_content_area(GTK_DIALOG(auth_dialog));
+	auth_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+	gtk_container_add(GTK_CONTAINER(auth_content), auth_vbox);
+
+	url_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+	token_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+	gtk_box_pack_start(GTK_BOX(auth_vbox), url_hbox, TRUE, TRUE, 10);
+	gtk_box_pack_start(GTK_BOX(auth_vbox), token_hbox, TRUE, TRUE, 10);
+
+	url_help_label = gtk_label_new("Please go to this URL and get an authentication code: ");
+	gtk_box_pack_start(GTK_BOX(url_hbox), url_help_label, FALSE, TRUE, 10);
+	url_label = gtk_link_button_new_with_label(AUTH_URL, "Get Authentication Code");
+	gtk_box_pack_start(GTK_BOX(url_hbox), url_label, FALSE, TRUE, 0);
+	token_help_label = gtk_label_new("Please input the authentication code here: ");
+	gtk_box_pack_start(GTK_BOX(token_hbox), token_help_label, FALSE, TRUE, 10);
+
+	/* Token Entry */
+	token_entry = gtk_entry_new();
+	gtk_box_pack_start(GTK_BOX(token_hbox), token_entry, FALSE, TRUE, 10);
+
+	gtk_widget_show_all(auth_dialog);
+
+	res = gtk_dialog_run(GTK_DIALOG(auth_dialog));
+
+	switch (res) {
+		case GTK_RESPONSE_ACCEPT:
+			token_text = gtk_entry_get_text(GTK_ENTRY(token_entry));
+			printf("Entered: %s\n", token_text);
+			fputs(token_text, grive);
+			pclose(grive);
+			break;
+		default:
+			pclose(grive);
+	}
+
+	gtk_widget_destroy(auth_dialog);
+}
+
 static void sync_cb(GtkWidget *button, gpointer data) {
 	const gchar* sync_dir;
 	gchar cmd[2048];
@@ -168,7 +238,7 @@ static void activate(GtkApplication* app, gpointer user_data) {
 	GtkWidget *main_vbox, *choose_dir_hbox, *sync_hbox, *check_hbox;
 	GtkWidget *choose_dir_button, *choose_dir_label;
 	GtkWidget *check_label;
-	GtkWidget *quit_button, *sync_button;
+	GtkWidget *quit_button, *sync_button, *auth_button;
 	GtkWidget *menu_bar, *help_menu, *help, *help_contents, *about;
 	GtkWidget *message_frame, *message_hbox;
 	GtkWidget *speed_vbox, *speed_hbox, *speed_frame, *speed_hbox_in, *upload_label, *download_label;
@@ -288,6 +358,10 @@ static void activate(GtkApplication* app, gpointer user_data) {
 	gtk_box_pack_end(GTK_BOX(sync_hbox), quit_button, FALSE, TRUE, 0);
 	g_signal_connect_swapped(quit_button, "clicked",
 							 G_CALLBACK(gtk_widget_destroy), app_data->window);
+
+	auth_button = gtk_button_new_with_label("Authorize");
+	gtk_box_pack_start(GTK_BOX(sync_hbox), auth_button, FALSE, TRUE, 10);
+	g_signal_connect(auth_button, "clicked", G_CALLBACK(auth_cb), app_data);
 
 
 	gtk_widget_show_all(app_data->window);

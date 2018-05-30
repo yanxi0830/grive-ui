@@ -114,6 +114,7 @@ static void auth_cb(GtkWidget *button, gpointer data) {
 	const gchar *token_text;
 	gint res;
 	GtkDialogFlags flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
+	GtkWidget *message_view = ((AppData *) data)->message_view;
 
 	const gchar *sync_dir;
 	gchar cmd[2048];
@@ -149,11 +150,11 @@ static void auth_cb(GtkWidget *button, gpointer data) {
 	url_label = gtk_link_button_new_with_label(AUTH_URL, "Get Authentication Code");
 	gtk_box_pack_start(GTK_BOX(url_hbox), url_label, FALSE, TRUE, 0);
 	token_help_label = gtk_label_new("Please input the authentication code here: ");
-	gtk_box_pack_start(GTK_BOX(token_hbox), token_help_label, FALSE, TRUE, 10);
+	gtk_box_pack_start(GTK_BOX(token_hbox), token_help_label, TRUE, TRUE, 10);
 
 	/* Token Entry */
 	token_entry = gtk_entry_new();
-	gtk_box_pack_start(GTK_BOX(token_hbox), token_entry, FALSE, TRUE, 10);
+	gtk_box_pack_start(GTK_BOX(token_hbox), token_entry, TRUE, TRUE, 10);
 
 	gtk_widget_show_all(auth_dialog);
 
@@ -169,6 +170,8 @@ static void auth_cb(GtkWidget *button, gpointer data) {
 		default:
 			pclose(grive);
 	}
+
+	gtk_label_set_text(GTK_LABEL(message_view), "Finished!\n");
 
 	gtk_widget_destroy(auth_dialog);
 }

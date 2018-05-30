@@ -31,7 +31,6 @@ static void show_dir_chooser(GtkWidget *button, gpointer data) {
 													  NULL);
 
 	res = gtk_dialog_run(GTK_DIALOG(dir_chooser_dialog));
-	//gtk_widget_show_all(((AppData *)data)->window);
 
 	if (res == GTK_RESPONSE_ACCEPT) {
 		char *filename;
@@ -44,82 +43,59 @@ static void show_dir_chooser(GtkWidget *button, gpointer data) {
 	gtk_widget_destroy(dir_chooser_dialog);
 }
 
-//static void preferences_activate(GtkWidget *widget, gpointer data) {
-//	// TODO
-//	/* Open Preferences Dialog */
-//	GtkWidget *preference_dialog;
-//	GtkWidget *preference_content;
-//	GtkWidget *preference_vbox, *upload_hbox, *download_hbox, *upload_frame, *download_frame;
-//	GtkWidget *upload_combo, *download_combo;
-//	gchar *upload_speed, *download_speed;
-//	int i;
-//
-//	gint res;
-//	GtkDialogFlags flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
-//
-//	preference_dialog = gtk_dialog_new_with_buttons("Preferences",
-//													GTK_WINDOW(((AppData * ) data)->window),
-//													flags,
-//													("_Cancel"),
-//													GTK_RESPONSE_REJECT,
-//													("_OK"),
-//													GTK_RESPONSE_ACCEPT,
-//													NULL);
-//
-//	preference_content = gtk_dialog_get_content_area(GTK_DIALOG(preference_dialog));
-//	preference_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
-//	upload_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-//	download_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-//	upload_frame = gtk_frame_new("Upload Speed");
-//	download_frame = gtk_frame_new("Download Speed");
-//	gtk_container_add(GTK_CONTAINER(preference_content), preference_vbox);
-//	gtk_box_pack_start(GTK_BOX(preference_vbox), upload_hbox, FALSE, TRUE, 10);
-//	gtk_box_pack_start(GTK_BOX(preference_vbox), download_hbox, FALSE, TRUE, 10);
-//	gtk_box_pack_start(GTK_BOX(upload_hbox), upload_frame, TRUE, TRUE, 10);
-//	gtk_box_pack_start(GTK_BOX(download_hbox), download_frame, TRUE, TRUE, 10);
-//
-//	/* Combo box to select speeds */
-//	upload_combo = gtk_combo_box_text_new_with_entry();
-//	download_combo = gtk_combo_box_text_new_with_entry();
-//	gtk_container_add(GTK_CONTAINER(upload_frame), upload_combo);
-//	gtk_container_add(GTK_CONTAINER(download_frame), download_combo);
-//	const char *speeds[] = {"Unlimited", "100", "200", "300", "500", "1000"};
-//
-//	for (i = 0; i < G_N_ELEMENTS(speeds); i++) {
-//		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(upload_combo), speeds[i]);
-//		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(download_combo), speeds[i]);
-//	}
-//
-//	gtk_combo_box_set_active(GTK_COMBO_BOX(upload_combo), 0);
-//	gtk_combo_box_set_active(GTK_COMBO_BOX(download_combo), 0);
-//
-//	gtk_widget_show_all(preference_dialog);
-//
-//	res = gtk_dialog_run(GTK_DIALOG(preference_dialog));
-//
-//	switch (res) {
-//		case GTK_RESPONSE_ACCEPT:
-//			g_free(((AppData * ) data)->upload_speed);
-//			upload_speed = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(upload_combo));
-//			((AppData * ) data)->upload_speed = upload_speed;
-//			printf("Upload Speed: %s\n", ((AppData * ) data)->upload_speed);
-//
-//			g_free(((AppData * ) data)->download_speed);
-//			download_speed = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(download_combo));
-//			((AppData * ) data)->upload_speed = download_speed;
-//			break;
-//		default:
-//			break;
-//	}
-//	printf("Upload Speed: %s\n", ((AppData * ) data)->upload_speed);
-//
-//	gtk_widget_destroy(preference_dialog);
-//
-//}
 
 static void about_activate(GtkWidget *widget, gpointer data) {
-	// TODO
 	/* Open About Dialog */
+	GtkWidget *about_dialog;
+	GtkWidget *about_content, *about_vbox, *grive_label;
+	gint res;
+	GtkDialogFlags flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
+	gchar cmd[1024];
+
+	about_dialog = gtk_dialog_new_with_buttons("About Grive",
+											   GTK_WINDOW(((AppData * ) data)->window),
+											   flags,
+											   ("_Close"),
+											   GTK_RESPONSE_ACCEPT,
+											   NULL);
+
+	gtk_window_set_default_size(GTK_WINDOW(about_dialog), 150, 80);
+
+	about_content = gtk_dialog_get_content_area(GTK_DIALOG(about_dialog));
+	about_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+	gtk_container_add(GTK_CONTAINER(about_content), about_vbox);
+
+	grive_label = gtk_label_new("grive\n");
+	gtk_box_pack_start(GTK_BOX(about_vbox), grive_label, TRUE, TRUE, 20);
+	gtk_label_set_line_wrap (GTK_LABEL(grive_label), TRUE);
+
+	g_snprintf(cmd, 1024, "grive -v");
+
+	FILE *grive = popen(cmd, "r");
+	char buf[1024];
+	int i = 0;
+	while (fgets(buf, sizeof(buf), grive) != 0) {
+		/* Show on GUI */
+		printf("%d %s", i, buf);
+		i++;
+	}
+	pclose(grive);
+
+	gtk_label_set_text(GTK_LABEL(grive_label), buf);
+
+	gtk_widget_show_all(about_dialog);
+
+	res = gtk_dialog_run(GTK_DIALOG(about_dialog));
+
+	switch (res) {
+		case GTK_RESPONSE_ACCEPT:
+			break;
+		default:
+			break;
+	}
+
+	gtk_widget_destroy(about_dialog);
+
 }
 
 static void help_contents_activate(GtkWidget *widget, gpointer data) {
@@ -193,9 +169,9 @@ static void activate(GtkApplication* app, gpointer user_data) {
 	GtkWidget *choose_dir_button, *choose_dir_label;
 	GtkWidget *check_label;
 	GtkWidget *quit_button, *sync_button;
-	GtkWidget *menu_bar, *help_menu, *settings_menu, *help, *settings, *help_contents, *about, *preferences;
+	GtkWidget *menu_bar, *help_menu, *help, *help_contents, *about;
 	GtkWidget *message_frame, *message_hbox;
-	GtkWidget *speed_hbox, *speed_frame, *speed_hbox_in, *upload_label, *download_label;
+	GtkWidget *speed_vbox, *speed_hbox, *speed_frame, *speed_hbox_in, *upload_label, *download_label;
 
 	AppData *app_data = g_new0(AppData, 1);
 	int i;
@@ -212,27 +188,18 @@ static void activate(GtkApplication* app, gpointer user_data) {
 	/* Menu Bar */
 	menu_bar = gtk_menu_bar_new();
 
-	settings_menu = gtk_menu_new();
-	settings = gtk_menu_item_new_with_label("Settings");
-	gtk_menu_item_set_submenu(GTK_MENU_ITEM(settings), settings_menu);
-
-	preferences = gtk_menu_item_new_with_label("Preferences");
-//	g_signal_connect(preferences, "activate", G_CALLBACK(preferences_activate), app_data);
-	gtk_menu_shell_append(GTK_MENU_SHELL(settings_menu), preferences);
-
 	help_menu = gtk_menu_new();
 	help = gtk_menu_item_new_with_label("Help");
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(help), help_menu);
 
 	help_contents = gtk_menu_item_new_with_label("Help Contents");
-	g_signal_connect(help_contents, "activate", G_CALLBACK(help_contents_activate), NULL);
+	g_signal_connect(help_contents, "activate", G_CALLBACK(help_contents_activate), app_data);
 	gtk_menu_shell_append(GTK_MENU_SHELL(help_menu), help_contents);
 
 	about = gtk_menu_item_new_with_label("About");
-	g_signal_connect(about, "activate", G_CALLBACK(about_activate), NULL);
+	g_signal_connect(about, "activate", G_CALLBACK(about_activate), app_data);
 	gtk_menu_shell_append(GTK_MENU_SHELL(help_menu), about);
 
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), settings);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), help);
 
 	gtk_box_pack_start(GTK_BOX(main_vbox), menu_bar, FALSE, FALSE,  0);
@@ -279,7 +246,9 @@ static void activate(GtkApplication* app, gpointer user_data) {
 	app_data->upload_combo = gtk_combo_box_text_new_with_entry();
 	app_data->download_combo = gtk_combo_box_text_new_with_entry();
 	speed_hbox_in = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-	gtk_container_add(GTK_CONTAINER(speed_frame), speed_hbox_in);
+	speed_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+	gtk_box_pack_start(GTK_BOX(speed_vbox), speed_hbox_in, TRUE, TRUE, 10);
+	gtk_container_add(GTK_CONTAINER(speed_frame), speed_vbox);
 
 	upload_label = gtk_label_new("Upload Speed");
 	download_label = gtk_label_new("Download Speed");

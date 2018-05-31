@@ -13,6 +13,7 @@ typedef struct AppData {
 	GtkWidget *no_remote_check;
 	GtkWidget *upload_combo;
 	GtkWidget *download_combo;
+	GtkWidget *progress_bar;
 } AppData;
 
 const gchar *AUTH_URL =
@@ -23,6 +24,8 @@ static void show_dir_chooser(GtkWidget *button, gpointer data) {
 	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER;
 	gint res;
 	GtkWidget *message_view = ((AppData *) data)->message_view;
+	GtkWidget *progress_bar = ((AppData *) data)->progress_bar;
+
 
 	dir_chooser_dialog = gtk_file_chooser_dialog_new(("Choose Google Drive Directory"),
 													  GTK_WINDOW(((AppData * ) data)->window),
@@ -40,6 +43,7 @@ static void show_dir_chooser(GtkWidget *button, gpointer data) {
 		filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dir_chooser_dialog));
 		gtk_label_set_text(GTK_LABEL(((AppData * )data)->curr_dir), filename);
 		gtk_label_set_text(GTK_LABEL(message_view), "Click Sync to sync with Google Drive\n");
+		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(progress_bar), 0.0);
 		g_free(filename);
 	}
 
@@ -78,7 +82,6 @@ static void about_activate(GtkWidget *widget, gpointer data) {
 }
 
 static void help_contents_activate(GtkWidget *widget, gpointer data) {
-	// TODO
 	/* Open Help Dialog */
 }
 
@@ -150,6 +153,27 @@ static void auth_cb(GtkWidget *button, gpointer data) {
 	gtk_widget_destroy(auth_dialog);
 }
 
+static gboolean fill (gpointer data) {
+	GtkWidget *progress_bar = ((AppData *) data)->progress_bar;
+
+	/*Get the current progress*/
+	gdouble fraction;
+	fraction = gtk_progress_bar_get_fraction (GTK_PROGRESS_BAR (progress_bar));
+
+	/*Increase the bar by 10% each time this function is called*/
+	fraction += 0.1;
+
+	/*Fill in the bar with the new fraction*/
+	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR (progress_bar), fraction);
+
+	if (fraction < 1.0) {
+		return TRUE;
+	}
+
+	return FALSE;
+
+}
+
 static void sync_cb(GtkWidget *button, gpointer data) {
 	const gchar* sync_dir;
 	gchar cmd[2048];
@@ -160,7 +184,11 @@ static void sync_cb(GtkWidget *button, gpointer data) {
 	GtkWidget *no_remote_check = ((AppData *) data)->no_remote_check;
 	GtkWidget *upload_combo = ((AppData *) data)->upload_combo;
 	GtkWidget *download_combo = ((AppData *) data)->download_combo;
+	GtkWidget *progress_bar = ((AppData *) data)->progress_bar;
 	gchar *upload_speed, *download_speed;
+
+	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(progress_bar), 0.0);
+	g_timeout_add (100, fill, data);
 
 	sync_dir = gtk_label_get_text(GTK_LABEL(sync_label));
 
@@ -215,6 +243,7 @@ static void sync_cb(GtkWidget *button, gpointer data) {
 	}
 
 }
+
 
 static void activate(GtkApplication* app, gpointer user_data) {
 	GtkWidget *main_vbox, *choose_dir_hbox, *sync_hbox, *check_hbox;
@@ -326,6 +355,10 @@ static void activate(GtkApplication* app, gpointer user_data) {
 	app_data->message_view = gtk_label_new("Click Sync to sync with Google Drive\n");
 	gtk_container_add(GTK_CONTAINER(message_frame), app_data->message_view);
 	gtk_box_pack_start(GTK_BOX(message_hbox), message_frame, TRUE, TRUE, 10);
+
+	app_data->progress_bar = gtk_progress_bar_new();
+	gtk_box_pack_start(GTK_BOX(main_vbox), app_data->progress_bar, TRUE, TRUE, 10);
+	// g_timeout_add (100, fill, app_data);
 
 	/* Sync and Quit Button */
 	sync_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);

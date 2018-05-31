@@ -206,6 +206,7 @@ static void sync_cb(GtkWidget *button, gpointer data) {
 		i++;
 	}
 	pclose(grive);
+
 	if (i == 1) {
 		gtk_label_set_text(GTK_LABEL(message_view),
 				"Please click Authenticate if this is the first time you're accessing your Google Drive!\n");
@@ -229,8 +230,7 @@ static void activate(GtkApplication* app, gpointer user_data) {
 
 	/* Top-level Window */
 	app_data->window = gtk_application_window_new(app);
-	gtk_window_set_title(GTK_WINDOW(app_data->window), "Grive2");
-	// gtk_window_set_default_size(GTK_WINDOW(app_data->window), 500, 200);
+	gtk_window_set_title(GTK_WINDOW(app_data->window), "Grive");
 
 	/* Box for packing */
 	main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);

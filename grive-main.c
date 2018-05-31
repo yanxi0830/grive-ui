@@ -50,54 +50,30 @@ static void show_dir_chooser(GtkWidget *button, gpointer data) {
 static void about_activate(GtkWidget *widget, gpointer data) {
 	/* Open About Dialog */
 	GtkWidget *about_dialog;
-	GtkWidget *about_content, *about_vbox, *grive_label;
-	gint res;
-	GtkDialogFlags flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
 	gchar cmd[1024];
+	const gchar *description = "Grive is a Google Drive client for GNU/Linux systems.\n It allows the synchronization of all your files on the cloud with a directory of your choice and the upload of new files to Google Drive.";
 
-	about_dialog = gtk_dialog_new_with_buttons("About Grive",
-											   GTK_WINDOW(((AppData * ) data)->window),
-											   flags,
-											   ("_Close"),
-											   GTK_RESPONSE_ACCEPT,
-											   NULL);
+	about_dialog = gtk_about_dialog_new();
+	gtk_about_dialog_set_program_name (GTK_ABOUT_DIALOG(about_dialog), "Grive");
 
-	gtk_window_set_default_size(GTK_WINDOW(about_dialog), 150, 80);
-
-	about_content = gtk_dialog_get_content_area(GTK_DIALOG(about_dialog));
-	about_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
-	gtk_container_add(GTK_CONTAINER(about_content), about_vbox);
-
-	grive_label = gtk_label_new("grive\n");
-	gtk_box_pack_start(GTK_BOX(about_vbox), grive_label, TRUE, TRUE, 20);
-	gtk_label_set_line_wrap (GTK_LABEL(grive_label), TRUE);
-
+	/* Get the version */
 	g_snprintf(cmd, 1024, "grive -v");
-
 	FILE *grive = popen(cmd, "r");
 	char buf[1024];
-	int i = 0;
 	while (fgets(buf, sizeof(buf), grive) != 0) {
-		/* Show on GUI */
-		printf("%d %s", i, buf);
-		i++;
+		printf("%s", buf);
 	}
 	pclose(grive);
 
-	gtk_label_set_text(GTK_LABEL(grive_label), buf);
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), buf);
+	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog), description);
 
-	gtk_widget_show_all(about_dialog);
-
-	res = gtk_dialog_run(GTK_DIALOG(about_dialog));
-
-	switch (res) {
-		case GTK_RESPONSE_ACCEPT:
-			break;
-		default:
-			break;
-	}
-
-	gtk_widget_destroy(about_dialog);
+	gtk_show_about_dialog(GTK_WINDOW(((AppData * ) data)->window),
+						  "program-name", "Grive",
+						  "version", buf,
+						  "comments", description,
+						  "title", "About Grive",
+						  NULL);
 
 }
 
@@ -135,7 +111,6 @@ static void auth_cb(GtkWidget *button, gpointer data) {
 											  GTK_RESPONSE_ACCEPT,
 											  NULL);
 
-
 	auth_content = gtk_dialog_get_content_area(GTK_DIALOG(auth_dialog));
 	auth_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
 	gtk_container_add(GTK_CONTAINER(auth_content), auth_vbox);
@@ -150,11 +125,11 @@ static void auth_cb(GtkWidget *button, gpointer data) {
 	url_label = gtk_link_button_new_with_label(AUTH_URL, "Get Authentication Code");
 	gtk_box_pack_start(GTK_BOX(url_hbox), url_label, FALSE, TRUE, 0);
 	token_help_label = gtk_label_new("Please input the authentication code here: ");
-	gtk_box_pack_start(GTK_BOX(token_hbox), token_help_label, TRUE, TRUE, 10);
+	gtk_box_pack_start(GTK_BOX(token_hbox), token_help_label, FALSE, TRUE, 10);
 
 	/* Token Entry */
 	token_entry = gtk_entry_new();
-	gtk_box_pack_start(GTK_BOX(token_hbox), token_entry, TRUE, TRUE, 10);
+	gtk_box_pack_start(GTK_BOX(token_hbox), token_entry, TRUE, TRUE, 0);
 
 	gtk_widget_show_all(auth_dialog);
 
@@ -166,12 +141,11 @@ static void auth_cb(GtkWidget *button, gpointer data) {
 			printf("Entered: %s\n", token_text);
 			fputs(token_text, grive);
 			pclose(grive);
+			gtk_label_set_text(GTK_LABEL(message_view), "Click Sync to sync with Google Drive\n");
 			break;
 		default:
 			pclose(grive);
 	}
-
-	gtk_label_set_text(GTK_LABEL(message_view), "Finished!\n");
 
 	gtk_widget_destroy(auth_dialog);
 }
@@ -228,12 +202,16 @@ static void sync_cb(GtkWidget *button, gpointer data) {
 	char buf[1024];
 	int i = 0;
 	while (fgets(buf, sizeof(buf), grive) != 0) {
-		/* Show on GUI */
 		printf("%d %s", i, buf);
 		i++;
 	}
 	pclose(grive);
-	gtk_label_set_text(GTK_LABEL(message_view), buf);
+	if (i == 1) {
+		gtk_label_set_text(GTK_LABEL(message_view),
+				"Please click Authenticate if this is the first time you're accessing your Google Drive!\n");
+	} else {
+		gtk_label_set_text(GTK_LABEL(message_view), buf);
+	}
 
 }
 
@@ -362,7 +340,7 @@ static void activate(GtkApplication* app, gpointer user_data) {
 	g_signal_connect_swapped(quit_button, "clicked",
 							 G_CALLBACK(gtk_widget_destroy), app_data->window);
 
-	auth_button = gtk_button_new_with_label("Authorize");
+	auth_button = gtk_button_new_with_label("Authenticate");
 	gtk_box_pack_start(GTK_BOX(sync_hbox), auth_button, FALSE, TRUE, 10);
 	g_signal_connect(auth_button, "clicked", G_CALLBACK(auth_cb), app_data);
 

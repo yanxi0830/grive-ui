@@ -15,3 +15,8 @@ make
 ./grive-main-bin
 ```
 
+## Usage
+Choose the directory you want to sync with your Google Dirve and click Sync. Grive will start downloading files from your Google Drive to your directory. 
+
+### Authentication
+When the directory is used for the first time, you should click Authenticate to grant permission to Grive to access your Google Drive. A dialog should appear with a URL and prompt. You should go the the link and get an authentication code, and paste it into the prompt. 

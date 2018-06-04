@@ -2,6 +2,8 @@
 
 This is a GUI based on the [Grive2](https://github.com/vitalif/grive2), a Google Drive clients that syncs all the files in your Google Drive into the current directory. 
 
+![grive-gui](https://user-images.githubusercontent.com/19946372/40927821-b1db5a56-67ed-11e8-9ec0-efc2a459025b.png)
+
 ## Installation
 
 ### Install dependencies

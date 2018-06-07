@@ -10,11 +10,12 @@ This is a GUI based on the [Grive2](https://github.com/vitalif/grive2), a Google
 You need to first install [Grive2](https://github.com/vitalif/grive2). For detailed instructions, see http://yourcmc.ru/wiki/Grive2#Installation
 
 ### Running GUI
-```
+```bash
 git clone https://github.com/yanxi0830/grive-ui.git
 cd grive-ui/
 make
-./grive-main-bin
+cd ~/googledrive
+~/git/grive-ui/grive-main-bin
 ```
 
 ## Usage
